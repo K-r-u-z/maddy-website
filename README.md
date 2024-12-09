@@ -1,8 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cake Pops by Maddy
 
-## Getting Started
+A modern, responsive website for a cake pop business built with Next.js 14, TypeScript, and Tailwind CSS.
 
-First, run the development server:
+## Features
+
+- 🎨 Modern, responsive design
+- ⚡ Built with Next.js 14 for optimal performance
+- 🎯 TypeScript for type safety
+- 💅 Tailwind CSS for styling
+- 🔤 Custom fonts (Geist and Geist Mono)
+- 📱 Mobile-first approach
+- 🖼️ Optimized image loading
+- 🎭 Custom SVG icons
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- Node.js (version 18.17 or higher)
+- npm, yarn, or pnpm
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/cake-pops-by-maddy.git
+cd cake-pops-by-maddy
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+3. Create a `.env.local` file in the root directory and add any necessary environment variables.
+
+## Development
+
+Run the development server:
 
 ```bash
 npm run dev
@@ -10,27 +48,65 @@ npm run dev
 yarn dev
 # or
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+cake-pops-by-maddy/
+├── src/
+│   ├── app/
+│   │   ├── fonts/         # Custom font files
+│   │   ├── globals.css    # Global styles
+│   │   └── page.tsx       # Home page
+│   └── components/        # React components
+├── public/               # Static assets
+│   └── svg files        # Custom SVG icons
+├── tailwind.config.ts   # Tailwind CSS configuration
+└── tsconfig.json        # TypeScript configuration
+```
 
-## Learn More
+## Customization
 
-To learn more about Next.js, take a look at the following resources:
+- **Styling**: Modify `src/app/globals.css` and `tailwind.config.ts` for custom styles
+- **Components**: Add or modify components in the `src/components` directory
+- **Fonts**: Custom fonts are located in `src/app/fonts`
+- **Icons**: SVG icons are stored in the `public` directory
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Building for Production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Build the application for production:
 
-## Deploy on Vercel
+```bash
+npm run build
+# or
+yarn build
+# or
+pnpm build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The easiest way to deploy this website is using the [Vercel Platform](https://vercel.com/new).
+
+1. Push your code to a GitHub repository
+2. Import your repository to Vercel
+3. Vercel will automatically detect Next.js and deploy your site
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue in the GitHub repository.
