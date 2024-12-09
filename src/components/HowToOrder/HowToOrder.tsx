@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 
 const HowToOrderSection = styled.section`
@@ -90,7 +91,61 @@ const StepDescription = styled.p`
   line-height: 1.6;
 `;
 
+interface OrderStep {
+  _id: string;
+  stepNumber: number;
+  title: string;
+  description: string;
+}
+
 const HowToOrder = () => {
+  const [orderSteps, setOrderSteps] = useState<OrderStep[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrderSteps = async () => {
+      try {
+        const response = await fetch('/api/public/order-steps');
+        if (!response.ok) throw new Error('Failed to fetch order steps');
+        const data = await response.json();
+        setOrderSteps(data);
+      } catch (error) {
+        console.error('Error fetching order steps:', error);
+        // Use placeholder data if fetch fails
+        setOrderSteps([
+          {
+            _id: '1',
+            stepNumber: 1,
+            title: 'Fill Out Order Form',
+            description: 'Complete our order form with your desired flavors, quantities, and event details. (Order form coming soon)'
+          },
+          {
+            _id: '2',
+            stepNumber: 2,
+            title: 'Review Quote',
+            description: 'We\'ll review your request and send you a pricing estimate. You can then decide to proceed with your order.'
+          },
+          {
+            _id: '3',
+            stepNumber: 3,
+            title: 'Make Payment',
+            description: 'Once you approve the quote, complete your payment to confirm your order.'
+          },
+          {
+            _id: '4',
+            stepNumber: 4,
+            title: 'Enjoy Your Cake Pops!',
+            description: 'Pick up your freshly made cake pops and enjoy your delicious treats!'
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderSteps();
+  }, []);
+
   return (
     <HowToOrderSection id="how-to-order">
       <Container>
@@ -101,36 +156,15 @@ const HowToOrder = () => {
           </Description>
         </Header>
         <StepsContainer>
-          <Step>
-            <StepNumber>Step 1</StepNumber>
-            <StepTitle>Fill Out Order Form</StepTitle>
-            <StepDescription>
-              Complete our order form with your desired flavors, quantities, and event details. 
-              <br />
-              <em>(Order form coming soon)</em>
-            </StepDescription>
-          </Step>
-          <Step>
-            <StepNumber>Step 2</StepNumber>
-            <StepTitle>Review Quote</StepTitle>
-            <StepDescription>
-              We'll review your request and send you a pricing estimate. You can then decide to proceed with your order.
-            </StepDescription>
-          </Step>
-          <Step>
-            <StepNumber>Step 3</StepNumber>
-            <StepTitle>Make Payment</StepTitle>
-            <StepDescription>
-              Once you approve the quote, complete your payment to confirm your order.
-            </StepDescription>
-          </Step>
-          <Step>
-            <StepNumber>Step 4</StepNumber>
-            <StepTitle>Enjoy Your Cake Pops!</StepTitle>
-            <StepDescription>
-              Pick up your freshly made cake pops and enjoy your delicious treats!
-            </StepDescription>
-          </Step>
+          {orderSteps.map((step) => (
+            <Step key={step._id}>
+              <StepNumber>Step {step.stepNumber}</StepNumber>
+              <StepTitle>{step.title}</StepTitle>
+              <StepDescription>
+                {step.description}
+              </StepDescription>
+            </Step>
+          ))}
         </StepsContainer>
       </Container>
     </HowToOrderSection>

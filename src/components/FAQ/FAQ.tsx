@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { css } from 'styled-components';
 
@@ -171,38 +171,57 @@ const AnswerText = styled.p`
   }
 `;
 
-const faqData = [
-  {
-    id: 1,
-    question: "How far in advance should I place my order?",
-    answer: "For standard orders, we recommend placing your order at least 1 week in advance. For large events or custom designs, please order 2-3 weeks ahead to ensure availability. During peak seasons (holidays, graduation, etc.), earlier ordering is recommended."
-  },
-  {
-    id: 2,
-    question: "What flavors are available?",
-    answer: "Our classic flavors include Vanilla, Double Chocolate, Strawberry Dream, Red Velvet, Birthday Cake, and Cookies & Cream. We also offer seasonal flavors and can accommodate special requests. Check our menu section for our current flavor selection and availability."
-  },
-  {
-    id: 3,
-    question: "Do you offer custom designs?",
-    answer: "Yes! We love creating custom designs for special occasions. Whether it's for birthdays, weddings, corporate events, or any celebration, we can match your theme, colors, and preferences. Custom designs may require additional time and cost - please include your design ideas in the order form."
-  },
-  {
-    id: 4,
-    question: "What is your delivery/pickup policy?",
-    answer: "Orders are available for pickup in Spartanburg, SC. Pickup times will be arranged after order confirmation. For large orders, local delivery may be available within Spartanburg - please inquire about delivery options when placing your order."
-  },
-  {
-    id: 5,
-    question: "What is the minimum order quantity?",
-    answer: "Our minimum order is one dozen (12) cake pops per flavor. For custom designs or special events, minimum quantities may vary. Larger orders may qualify for bulk pricing - please inquire for details."
-  }
-];
+interface FAQItem {
+  _id: string;
+  question: string;
+  answer: string;
+  order: number;
+}
 
 const FAQ = () => {
-  const [openItems, setOpenItems] = useState<number[]>([]);
+  const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
+  const [openItems, setOpenItems] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleItem = (id: number) => {
+  useEffect(() => {
+    const fetchFAQs = async () => {
+      try {
+        const response = await fetch('/api/public/faq');
+        if (!response.ok) throw new Error('Failed to fetch FAQs');
+        const data = await response.json();
+        setFaqItems(data);
+      } catch (error) {
+        console.error('Error fetching FAQs:', error);
+        // Use placeholder data if fetch fails
+        setFaqItems([
+          {
+            _id: '1',
+            question: "How far in advance should I place my order?",
+            answer: "For standard orders, we recommend placing your order at least 1 week in advance. For large events or custom designs, please order 2-3 weeks ahead to ensure availability. During peak seasons (holidays, graduation, etc.), earlier ordering is recommended.",
+            order: 1
+          },
+          {
+            _id: '2',
+            question: "What flavors are available?",
+            answer: "Our classic flavors include Vanilla, Double Chocolate, Strawberry Dream, Red Velvet, Birthday Cake, and Cookies & Cream. We also offer seasonal flavors and can accommodate special requests. Check our menu section for our current flavor selection and availability.",
+            order: 2
+          },
+          {
+            _id: '3',
+            question: "Do you offer custom designs?",
+            answer: "Yes! We love creating custom designs for special occasions. Whether it's for birthdays, weddings, corporate events, or any celebration, we can match your theme, colors, and preferences. Custom designs may require additional time and cost - please include your design ideas in the order form.",
+            order: 3
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFAQs();
+  }, []);
+
+  const toggleItem = (id: string) => {
     setOpenItems(prev => 
       prev.includes(id) 
         ? prev.filter(item => item !== id)
@@ -219,25 +238,25 @@ const FAQ = () => {
             Find answers to common questions about our cake pops and ordering process.
           </Description>
         </Header>
-        {faqData.map((item) => (
+        {faqItems.map((item) => (
           <FAQItem 
-            key={item.id}
-            $isOpen={openItems.includes(item.id)}
-            onClick={() => toggleItem(item.id)}
+            key={item._id}
+            $isOpen={openItems.includes(item._id)}
+            onClick={() => toggleItem(item._id)}
             role="button"
             tabIndex={0}
             onKeyPress={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                toggleItem(item.id);
+                toggleItem(item._id);
               }
             }}
           >
-            <Question $isOpen={openItems.includes(item.id)}>
-              <QuestionText $isOpen={openItems.includes(item.id)}>
+            <Question $isOpen={openItems.includes(item._id)}>
+              <QuestionText $isOpen={openItems.includes(item._id)}>
                 {item.question}
               </QuestionText>
             </Question>
-            <Answer $isOpen={openItems.includes(item.id)}>
+            <Answer $isOpen={openItems.includes(item._id)}>
               <AnswerContent>
                 <AnswerText>{item.answer}</AnswerText>
               </AnswerContent>

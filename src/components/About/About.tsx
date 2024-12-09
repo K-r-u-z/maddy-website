@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image';
 
@@ -144,22 +145,46 @@ const ImageContainer = styled.div`
   }
 `;
 
+interface AboutData {
+  title: string;
+  description: string;
+  image: string;
+}
+
 const About = () => {
+  const [aboutData, setAboutData] = useState<AboutData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAbout = async () => {
+      try {
+        const response = await fetch('/api/public/about');
+        const data = await response.json();
+        if (data._id) {
+          setAboutData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching about data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAbout();
+  }, []);
+
+  if (isLoading) {
+    return null; // or a loading spinner if you prefer
+  }
+
   return (
     <AboutSection id="about">
       <AboutContainer>
         <AboutContent>
-          <AboutTitle>About Me</AboutTitle>
-          <AboutText>
-            Hello! My name is Madelyn Solesbee and I am a senior at Spartanburg Methodist College 
-            studying Criminal Justice and Psychology.
-          </AboutText>
-          <AboutText>
-            In 2023, I began making cake pops for family and holiday events. Family and friends 
-            always look forward to me bringing during the holidays and was soon persuaded by 
-            family members to start a business! Now, my personal hobby is now expanding to all 
-            of Spartanburg, SC!
-          </AboutText>
+          <AboutTitle>{aboutData?.title || 'About Me'}</AboutTitle>
+          {aboutData?.description.split('\n').map((paragraph, index) => (
+            <AboutText key={index}>{paragraph}</AboutText>
+          ))}
           <ContactSection>
             <ContactTitle>Need to get in contact with me?</ContactTitle>
             <ContactLink href="mailto:cakepopsbymaddy@gmail.com">
@@ -176,7 +201,7 @@ const About = () => {
         </AboutContent>
         <ImageContainer>
           <Image
-            src="/images/about.png"
+            src={aboutData?.image || '/images/about.png'}
             alt="Maddy making cake pops"
             fill
             style={{ objectFit: 'cover' }}
