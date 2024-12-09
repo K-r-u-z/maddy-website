@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import styled, { useTheme } from 'styled-components';
 import { SprinkleContainer } from './SprinkleContainer';
+import { useRouter } from 'next/navigation';
 
 const HeroContainer = styled.section`
   position: relative;
@@ -159,6 +160,21 @@ const SecondaryButton = styled(CTAButton)`
 `;
 
 const Hero = () => {
+  const router = useRouter();
+
+  const handleOrderClick = () => {
+    // Open the Microsoft Forms order form in a new tab
+    window.open('https://forms.office.com/Pages/ResponsePage.aspx?id=JUduhRIIxEabGTNNLgMYdOiXhLZCYHBOrwOKyP9fOqhUOVZTRkpPRVZDNzk2RjRJNVlTRkhQS1JCTy4u', '_blank');
+  };
+
+  const handleViewMenuClick = () => {
+    // Smooth scroll to menu section
+    const menuSection = document.getElementById('menu');
+    if (menuSection) {
+      menuSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <HeroContainer>
       <BackgroundImage>
@@ -188,8 +204,8 @@ const Hero = () => {
           Here to make you pop!
         </Subtitle>
         <ButtonContainer>
-          <CTAButton>Order Now</CTAButton>
-          <SecondaryButton>View Menu</SecondaryButton>
+          <CTAButton onClick={handleOrderClick}>Order Now</CTAButton>
+          <SecondaryButton onClick={handleViewMenuClick}>View Menu</SecondaryButton>
         </ButtonContainer>
       </HeroContent>
     </HeroContainer>

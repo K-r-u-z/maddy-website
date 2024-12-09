@@ -235,38 +235,6 @@ const MenuButton = styled.button<MobileMenuProps>`
   }
 `;
 
-const CloseButton = styled.button`
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 30px;
-  height: 30px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  z-index: 100;
-  padding: 0;
-
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: ${({ theme }) => theme.colors.primary[900]};
-  }
-
-  &::before {
-    transform: rotate(45deg);
-  }
-
-  &::after {
-    transform: rotate(-45deg);
-  }
-`;
-
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -417,7 +385,6 @@ const Navigation = () => {
       </NavContainer>
       <MobileNav $isOpen={isOpen}>
         <MobileNavContent>
-          <CloseButton onClick={() => setIsOpen(false)} aria-label="Close menu" />
           {navLinks}
         </MobileNavContent>
       </MobileNav>
