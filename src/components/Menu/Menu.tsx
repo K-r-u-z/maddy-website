@@ -215,13 +215,28 @@ const Menu = () => {
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
+        setLoading(true);
+        console.log('Fetching menu items...');
+        
         const response = await fetch('/api/public/menu');
-        if (!response.ok) throw new Error('Failed to fetch menu items');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
-        const visibleItems = data.filter((item: MenuItem) => item.isVisible);
-        setMenuItems(visibleItems);
+        console.log('Received data:', data);
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        setMenuItems(data);
+        console.log('Menu items set:', data.length);
       } catch (error) {
         console.error('Error fetching menu items:', error);
+        setMenuItems([]);
       } finally {
         setLoading(false);
       }

@@ -5,10 +5,10 @@ import OrderStep from '@/models/OrderStep';
 export async function GET() {
   try {
     await connectDB();
-    const steps = await OrderStep.find().sort({ stepNumber: 1 });
+    const steps = await OrderStep.find().sort({ order: 1 });
     return NextResponse.json(steps);
   } catch (error) {
-    console.error('Error fetching order steps:', error);
-    return NextResponse.json({ error: 'Error fetching order steps' }, { status: 500 });
+    console.error('MongoDB Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 

@@ -8,7 +8,7 @@ export async function GET() {
     const faqs = await FAQ.find().sort({ order: 1 });
     return NextResponse.json(faqs);
   } catch (error) {
-    console.error('Error fetching FAQs:', error);
-    return NextResponse.json({ error: 'Error fetching FAQs' }, { status: 500 });
+    console.error('MongoDB Error:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 } 
