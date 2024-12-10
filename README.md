@@ -37,6 +37,13 @@ pnpm install
 ```
 
 3. Create a `.env.local` file in the root directory and add any necessary environment variables.
+```bash
+MONGODB_URI= 
+NEXTAUTH_SECRET= 
+ADMIN_USERNAME= 
+ADMIN_PASSWORD= 
+NEXTAUTH_URL= 
+```
 
 ## Development
 
