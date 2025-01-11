@@ -5,8 +5,32 @@ import MenuItem from '@/models/MenuItem';
 export async function GET() {
   try {
     await connectDB();
-    const items = await MenuItem.find({ isVisible: true }).sort({ title: 1 });
-    return NextResponse.json(items);
+    
+    // First ensure all items have showPrice set
+    await MenuItem.updateMany(
+      { showPrice: { $exists: false } },
+      { $set: { showPrice: true } }
+    );
+
+    // Then fetch the items
+    const items = await MenuItem.find({ isVisible: true })
+      .select('title description price image isVisible isSoldOut showPrice')
+      .lean()  // Convert to plain JavaScript objects
+      .exec();
+    
+    // Ensure showPrice is set in the response
+    const processedItems = items.map(item => ({
+      ...item,
+      showPrice: item.showPrice ?? true  // Default to true if undefined
+    }));
+    
+    console.log('Public menu items:', processedItems.map(item => ({
+      id: item._id,
+      title: item.title,
+      showPrice: item.showPrice
+    })));
+    
+    return NextResponse.json(processedItems);
   } catch (error) {
     console.error('MongoDB Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

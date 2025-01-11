@@ -4,9 +4,10 @@ export interface MenuItemDocument extends mongoose.Document {
   title: string;
   description: string;
   price: string;
-  image: string;
+  image?: string;
   isVisible: boolean;
   isSoldOut: boolean;
+  showPrice: boolean;
 }
 
 const menuItemSchema = new mongoose.Schema({
@@ -24,7 +25,7 @@ const menuItemSchema = new mongoose.Schema({
   },
   image: {
     type: String,
-    required: true,
+    required: false,
   },
   isVisible: {
     type: Boolean,
@@ -34,8 +35,21 @@ const menuItemSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  showPrice: {
+    type: Boolean,
+    default: true,
+    required: true,
+  },
 }, {
   timestamps: true,
+});
+
+// Add a pre-save middleware to ensure showPrice is set
+menuItemSchema.pre('save', function(next) {
+  if (this.showPrice === undefined) {
+    this.showPrice = true;
+  }
+  next();
 });
 
 const MenuItem = mongoose.models.MenuItem || mongoose.model<MenuItemDocument>('MenuItem', menuItemSchema);

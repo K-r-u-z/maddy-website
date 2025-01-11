@@ -16,7 +16,6 @@ export async function PUT(
 
     const id = request.url.split('/').pop();
     
-    // Validate ID format
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
     }
@@ -30,30 +29,27 @@ export async function PUT(
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
 
-    // If we're only updating visibility, merge with existing data
-    const updateData = {
-      ...existingItem.toObject(),
-      ...data,
-    };
+    // Create update object with only the fields that are provided
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.price !== undefined) updateData.price = data.price;
+    if (data.isVisible !== undefined) updateData.isVisible = data.isVisible;
+    if (data.isSoldOut !== undefined) updateData.isSoldOut = data.isSoldOut;
+    if (data.showPrice !== undefined) updateData.showPrice = data.showPrice;
+    
+    // Handle image field specifically
+    if ('image' in data) {
+      updateData.image = data.image || null; // Set to null if empty string
+    }
 
-    // Remove fields that shouldn't be updated if they weren't provided
-    if (!data.title) delete updateData.title;
-    if (!data.description) delete updateData.description;
-    if (!data.price) delete updateData.price;
-    if (!data.image) delete updateData.image;
-    if (typeof data.isVisible !== 'boolean') delete updateData.isVisible;
-
-    const item = await MenuItem.findByIdAndUpdate(
-      id, 
+    const updatedItem = await MenuItem.findByIdAndUpdate(
+      id,
       updateData,
       { new: true }
     );
-    
-    if (!item) {
-      return NextResponse.json({ error: 'Item not found' }, { status: 404 });
-    }
 
-    return NextResponse.json(item);
+    return NextResponse.json(updatedItem);
   } catch (error) {
     console.error('Error updating menu item:', error);
     return NextResponse.json({ error: 'Error updating menu item' }, { status: 500 });

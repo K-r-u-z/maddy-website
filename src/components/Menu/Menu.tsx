@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import Image from 'next/image';
 
 const MenuSection = styled.section`
@@ -82,52 +82,48 @@ const MenuGrid = styled.div<{ $isSingleItem: boolean }>`
   }
 `;
 
-const MenuItem = styled.div<{ $isSingleItem: boolean }>`
-  display: flex;
-  flex-direction: column;
+const MenuItem = styled.div<{ $hasImage: boolean }>`
   background: white;
   border-radius: ${({ theme }) => theme.borderRadius.lg};
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
-  width: 100%;
-  max-width: ${({ $isSingleItem }) => $isSingleItem ? '500px' : 'none'};
-  margin: ${({ $isSingleItem }) => $isSingleItem ? '0 auto' : '0'};
+  display: flex;
+  flex-direction: ${({ $hasImage }) => $hasImage ? 'column' : 'row'};
+  height: 100%;
 
   &:hover {
-    transform: ${({ $isSingleItem }) => 
-      $isSingleItem ? 'scale(1.02)' : 'translateY(-4px)'};
-  }
-
-  @media (max-width: 1024px) {
-    max-width: ${({ $isSingleItem }) => $isSingleItem ? '450px' : 'none'};
+    transform: translateY(-4px);
   }
 
   @media (max-width: 768px) {
-    max-width: ${({ $isSingleItem }) => $isSingleItem ? '400px' : 'none'};
+    flex-direction: column;
   }
 `;
 
-const MenuImageContainer = styled.div<{ $isSingleItem: boolean }>`
+const MenuImageContainer = styled.div<{ $hasImage: boolean }>`
   position: relative;
   width: 100%;
-  padding-top: ${({ $isSingleItem }) => $isSingleItem ? '80%' : '60%'};
+  padding-top: ${({ $hasImage }) => $hasImage ? '75%' : '0'};
+  flex-shrink: 0;
 `;
 
 const StyledImage = styled(Image)`
   object-fit: cover;
 `;
 
-const MenuItemContent = styled.div<{ $isSingleItem: boolean }>`
+const MenuItemContent = styled.div<{ $isSingleItem?: boolean; $hasImage?: boolean }>`
   padding: ${({ theme }) => theme.spacing.xl};
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
-
-  @media (max-width: 768px) {
-    padding: ${({ theme }) => theme.spacing.lg};
-    gap: ${({ theme }) => theme.spacing.sm};
-  }
+  justify-content: ${({ $hasImage }) => $hasImage ? 'flex-start' : 'center'};
+  
+  ${({ $isSingleItem, theme }) =>
+    $isSingleItem &&
+    css`
+      padding: ${theme.spacing['2xl']};
+    `}
 `;
 
 const MenuItemTitle = styled.h3<{ $isSingleItem: boolean }>`
@@ -206,6 +202,7 @@ interface MenuItem {
   image: string;
   isVisible: boolean;
   isSoldOut: boolean;
+  showPrice: boolean;
 }
 
 const Menu = () => {
@@ -226,14 +223,13 @@ const Menu = () => {
         }
         
         const data = await response.json();
-        console.log('Received data:', data);
+        console.log('Received menu items:', data);
         
         if (data.error) {
           throw new Error(data.error);
         }
         
         setMenuItems(data);
-        console.log('Menu items set:', data.length);
       } catch (error) {
         console.error('Error fetching menu items:', error);
         setMenuItems([]);
@@ -281,29 +277,45 @@ const Menu = () => {
         </MenuHeader>
         <MenuGrid $isSingleItem={isSingleItem}>
           {menuItems.map((item) => (
-            <MenuItem key={item._id} $isSingleItem={isSingleItem}>
-              <MenuImageContainer $isSingleItem={isSingleItem}>
-                <StyledImage
-                  src={item.image || '/images/placeholder.jpg'}
-                  alt={item.title}
-                  fill
-                  sizes={isSingleItem ? '500px' : '300px'}
-                  priority={isSingleItem}
-                  style={{ 
-                    objectFit: 'cover',
-                    opacity: item.isSoldOut ? 0.7 : 1 
-                  }}
-                />
-                {item.isSoldOut && (
-                  <SoldOutOverlay>
-                    <SoldOutText>Sold Out</SoldOutText>
-                  </SoldOutOverlay>
-                )}
-              </MenuImageContainer>
-              <MenuItemContent $isSingleItem={isSingleItem}>
+            <MenuItem key={item._id} $hasImage={!!item.image}>
+              {item.image && (
+                <MenuImageContainer $hasImage={true}>
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    sizes={isSingleItem ? '500px' : '300px'}
+                    priority={isSingleItem}
+                    style={{ 
+                      objectFit: 'cover',
+                      opacity: item.isSoldOut ? 0.7 : 1 
+                    }}
+                  />
+                  {item.isSoldOut && (
+                    <SoldOutOverlay>
+                      <SoldOutText>Sold Out</SoldOutText>
+                    </SoldOutOverlay>
+                  )}
+                </MenuImageContainer>
+              )}
+              <MenuItemContent 
+                $isSingleItem={isSingleItem} 
+                $hasImage={!!item.image}
+              >
                 <MenuItemTitle $isSingleItem={isSingleItem}>{item.title}</MenuItemTitle>
-                <MenuItemDescription $isSingleItem={isSingleItem}>{item.description}</MenuItemDescription>
-                <MenuItemPrice $isSingleItem={isSingleItem}>{formatPrice(item.price)}</MenuItemPrice>
+                <MenuItemDescription $isSingleItem={isSingleItem}>
+                  {item.description}
+                </MenuItemDescription>
+                {item.showPrice && (
+                  <MenuItemPrice $isSingleItem={isSingleItem}>
+                    {formatPrice(item.price)}
+                  </MenuItemPrice>
+                )}
+                {item.isSoldOut && !item.image && (
+                  <SoldOutText style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                    Sold Out
+                  </SoldOutText>
+                )}
               </MenuItemContent>
             </MenuItem>
           ))}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
-import styled from 'styled-components';
+import styled, { useTheme } from 'styled-components';
 import Image from 'next/image';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
@@ -13,6 +13,7 @@ interface MenuItem {
   image: string;
   isVisible: boolean;
   isSoldOut: boolean;
+  showPrice: boolean;
 }
 
 interface MenuEditorProps {
@@ -243,9 +244,19 @@ const ImagePreview = styled.div`
   }
 `;
 
-const ErrorMessage = styled.p`
+const LoadingPlaceholder = styled.div`
+  text-align: center;
+  padding: ${({ theme }) => theme.spacing.xl};
+  color: ${({ theme }) => theme.colors.neutral[600]};
+`;
+
+const ErrorMessage = styled.div`
   color: red;
   margin-bottom: ${({ theme }) => theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.md};
+  background: #fff2f2;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border: 1px solid #ffcdd2;
 `;
 
 const PriceInputGroup = styled.div`
@@ -300,12 +311,39 @@ const SoldOutToggle = styled.button<{ $isSoldOut: boolean }>`
   }
 `;
 
+const PriceToggle = styled.button<{ $showPrice: boolean }>`
+  padding: ${({ theme }) => theme.spacing.sm};
+  background: ${({ $showPrice, theme }) => 
+    $showPrice ? theme.colors.success[500] : theme.colors.neutral[300]};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-right: ${({ theme }) => theme.spacing.sm};
+
+  &:hover {
+    background: ${({ $showPrice, theme }) => 
+      $showPrice ? theme.colors.success[600] : theme.colors.neutral[400]};
+  }
+`;
+
+const RemoveImageButton = styled(Button)`
+  background-color: ${({ theme }) => theme.colors.error[500]};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.error[600]};
+  }
+`;
+
 interface MenuItemCardProps {
   item: MenuItem;
   onDelete: (id: string) => Promise<void>;
   onEdit: (item: MenuItem) => void;
   onToggleVisibility: (id: string, isVisible: boolean) => Promise<void>;
   onToggleSoldOut: (id: string, isSoldOut: boolean) => Promise<void>;
+  onTogglePrice: (id: string, showPrice: boolean) => Promise<void>;
 }
 
 const MenuItemCard: React.FC<MenuItemCardProps> = ({ 
@@ -313,7 +351,8 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
   onDelete, 
   onEdit,
   onToggleVisibility,
-  onToggleSoldOut 
+  onToggleSoldOut,
+  onTogglePrice 
 }) => (
   <ItemCard>
     <ItemImage>
@@ -354,6 +393,16 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
         >
           {item.isSoldOut ? 'Sold Out' : 'In Stock'}
         </SoldOutToggle>
+        <PriceToggle
+          onClick={async (e) => {
+            e.stopPropagation();
+            await onTogglePrice(item._id!, !item.showPrice);
+          }}
+          $showPrice={item.showPrice}
+          aria-label={`Toggle price ${item.showPrice ? 'off' : 'on'}`}
+        >
+          {item.showPrice ? 'Price On' : 'Price Off'}
+        </PriceToggle>
         <IconButton 
           onClick={(e) => {
             e.stopPropagation();
@@ -390,14 +439,15 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
 );
 
 const MenuEditor = ({ onLoad }: MenuEditorProps) => {
-  const [items, setItems] = useState<MenuItem[]>([]);
+  const theme = useTheme();
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -407,7 +457,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
       const response = await fetch('/api/menu');
       const data = await response.json();
       console.log('Fetched items:', data);
-      setItems(data);
+      setMenuItems(data);
       onLoad?.();
     } catch (error) {
       console.error('Error fetching menu items:', error);
@@ -454,67 +504,63 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     setError('');
 
-    const cleanPrice = price.replace('$', '').trim();
-
     try {
-      let imageUrl = '';
+      let imageUrl = imagePreview;
+
+      // Only process new image upload if there is a file selected
       if (image) {
         const formData = new FormData();
         formData.append('file', image);
+
         const uploadResponse = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
+
         if (!uploadResponse.ok) {
-          const uploadError = await uploadResponse.json();
-          throw new Error(uploadError.error || 'Failed to upload image');
+          throw new Error('Failed to upload image');
         }
-        const { url } = await uploadResponse.json();
-        imageUrl = url;
+
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.url;
       }
 
-      const isNewItem = !editingItem?._id;
-      const method = isNewItem ? 'POST' : 'PUT';
-      const endpoint = isNewItem ? '/api/menu' : `/api/menu/${editingItem._id}`;
+      const itemData = {
+        title,
+        description,
+        price,
+        image: imageUrl || null, // Explicitly set to null if empty
+        isVisible: editingItem?.isVisible ?? true,
+        isSoldOut: editingItem?.isSoldOut ?? false,
+        showPrice: editingItem?.showPrice ?? true,
+      };
 
-      console.log('Submitting menu item:', {
-        method,
-        endpoint,
-        isNewItem,
-        editingItem
-      });
+      const url = editingItem?._id 
+        ? `/api/menu/${editingItem._id}` 
+        : '/api/menu';
 
-      const response = await fetch(endpoint, {
-        method,
+      const response = await fetch(url, {
+        method: editingItem?._id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          title,
-          description,
-          price: cleanPrice,
-          image: imageUrl || (editingItem ? editingItem.image : ''),
-        }),
+        body: JSON.stringify(itemData),
       });
 
-      const data = await response.json();
-      console.log('Save response:', { status: response.status, data });
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to save menu item');
+        throw new Error('Failed to save menu item');
       }
 
       await fetchItems();
       resetForm();
-      setEditingItem(null);
-    } catch (err) {
-      console.error('Error saving menu item:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save menu item');
+    } catch (error) {
+      console.error('Error saving menu item:', error);
+      setError(error instanceof Error ? error.message : 'Failed to save menu item');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -536,7 +582,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
       }
 
       // Update local state first
-      setItems(prevItems => prevItems.filter(item => item._id !== id));
+      setMenuItems(prevItems => prevItems.filter(item => item._id !== id));
       console.log('Item removed from local state');
 
       // Fetch fresh data from server
@@ -591,6 +637,41 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
     }
   };
 
+  const handleTogglePrice = async (id: string, showPrice: boolean) => {
+    try {
+      // Update local state immediately for optimistic UI
+      setMenuItems(prevItems =>
+        prevItems.map(item =>
+          item._id === id ? { ...item, showPrice } : item
+        )
+      );
+
+      const response = await fetch(`/api/menu/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ showPrice }),
+      });
+
+      if (!response.ok) {
+        // Revert the state if the request fails
+        setMenuItems(prevItems =>
+          prevItems.map(item =>
+            item._id === id ? { ...item, showPrice: !showPrice } : item
+          )
+        );
+        throw new Error('Failed to update price visibility');
+      }
+
+      // No need to fetch all items again since we've already updated the local state
+      // await fetchItems();
+    } catch (error) {
+      console.error('Error updating price visibility:', error);
+      alert('Failed to update price visibility. Please try again.');
+    }
+  };
+
   return (
     <EditorContainer $isEditing={!!editingItem}>
       {!editingItem ? (
@@ -604,7 +685,8 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
                 price: '', 
                 image: '',
                 isVisible: true,
-                isSoldOut: false
+                isSoldOut: false,
+                showPrice: true
               });
             }}
           >
@@ -612,7 +694,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
           </AddButton>
 
           <ItemList>
-            {items.map((item) => (
+            {menuItems.map((item) => (
               <MenuItemCard
                 key={item._id}
                 item={item}
@@ -620,6 +702,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
                 onEdit={handleEdit}
                 onToggleVisibility={handleToggleVisibility}
                 onToggleSoldOut={handleToggleSoldOut}
+                onTogglePrice={handleTogglePrice}
               />
             ))}
           </ItemList>
@@ -668,29 +751,41 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
             </PriceInputGroup>
           </FormGroup>
           <FormGroup>
-            <Label htmlFor="image">Image</Label>
+            <Label>Image (Optional)</Label>
             <Input
-              id="image"
-              name="image"
               type="file"
               accept="image/*"
               onChange={handleImageChange}
               ref={fileInputRef}
             />
             {imagePreview && (
-              <ImagePreview>
-                <Image
-                  src={imagePreview}
-                  alt="Preview"
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              </ImagePreview>
+              <div style={{ marginTop: '0.5rem' }}>
+                <RemoveImageButton 
+                  type="button" 
+                  onClick={() => {
+                    setImagePreview('');
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                    setEditingItem(prev => prev ? { ...prev, image: '' } : null);
+                  }}
+                >
+                  Remove Image
+                </RemoveImageButton>
+                <ImagePreview>
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    fill
+                    style={{ objectFit: 'cover' }}
+                  />
+                </ImagePreview>
+              </div>
             )}
           </FormGroup>
           <ButtonGroup>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : (editingItem._id ? 'Update Item' : 'Add Item')}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Saving...' : (editingItem._id ? 'Update Item' : 'Add Item')}
             </Button>
             <CancelButton type="button" onClick={resetForm}>
               Cancel

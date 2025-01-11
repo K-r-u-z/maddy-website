@@ -9,6 +9,7 @@ import OrderStepsEditor from '@/components/Admin/OrderStepsEditor';
 import FAQEditor from '@/components/Admin/FAQEditor';
 import Navigation from '@/components/Admin/Navigation';
 import AboutEditor from '@/components/Admin/AboutEditor';
+import EmailResponder from '@/components/Admin/EmailResponder';
 
 const AdminContainer = styled.div`
   min-height: 100vh;
@@ -161,17 +162,24 @@ export default function AdminDashboard() {
             >
               About
             </Tab>
+            <Tab 
+              $isActive={activeTab === 'email'} 
+              onClick={() => setActiveTab('email')}
+            >
+              Email
+            </Tab>
           </TabContainer>
 
           <EditorContainer>
-            {isDataLoading && (
+            {isDataLoading && activeTab !== 'email' && (
               <LoadingContainer style={{ minHeight: '300px' }}>Loading...</LoadingContainer>
             )}
-            <div style={{ display: isDataLoading ? 'none' : 'block' }}>
+            <div style={{ display: (isDataLoading && activeTab !== 'email') ? 'none' : 'block' }}>
               {activeTab === 'menu' && <MenuEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'orderSteps' && <OrderStepsEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'faq' && <FAQEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'about' && <AboutEditor onLoad={() => setIsDataLoading(false)} />}
+              {activeTab === 'email' && <EmailResponder onLoad={() => setIsDataLoading(false)} />}
             </div>
           </EditorContainer>
         </ContentWrapper>
