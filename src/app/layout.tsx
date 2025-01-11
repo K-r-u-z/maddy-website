@@ -17,6 +17,11 @@ const playfair = Playfair_Display({
 export const metadata = {
   title: 'Cake Pops by Maddy',
   description: 'Handcrafted cake pops made with love',
+  icons: {
+    icon: '/images/favicon.ico',
+    shortcut: '/images/favicon.ico',
+    apple: '/images/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
