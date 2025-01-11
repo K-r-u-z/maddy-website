@@ -2,7 +2,7 @@
 
 import styled from 'styled-components';
 import Link from 'next/link';
-import { FaFacebook } from 'react-icons/fa';
+import { FaFacebook, FaInstagram } from 'react-icons/fa';
 
 const FooterContainer = styled.footer`
   background-color: ${({ theme }) => theme.colors.primary[100]};
@@ -123,6 +123,14 @@ const Footer = () => {
               aria-label="Facebook"
             >
               <FaFacebook />
+            </SocialIcon>
+            <SocialIcon 
+              href="https://www.instagram.com/cakepopsbymaddy/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+            >
+              <FaInstagram />
             </SocialIcon>
           </SocialLinks>
         </FooterSection>
