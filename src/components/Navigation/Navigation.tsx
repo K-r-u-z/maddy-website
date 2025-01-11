@@ -306,13 +306,6 @@ const Navigation = () => {
   const navLinks = (
     <>
       <NavLink 
-        href="#home" 
-        onClick={(e) => handleLinkClick(e, '#home')} 
-        $isActive={isHomePage && activeSection === 'home'}
-      >
-        Home
-      </NavLink>
-      <NavLink 
         href="#about" 
         onClick={(e) => handleLinkClick(e, '#about')} 
         $isActive={isHomePage && activeSection === 'about'}
@@ -339,18 +332,6 @@ const Navigation = () => {
         $isActive={isHomePage && activeSection === 'faq'}
       >
         FAQ
-      </NavLink>
-      <NavLink 
-        href="https://forms.office.com/Pages/ResponsePage.aspx?id=JUduhRIIxEabGTNNLgMYdOiXhLZCYHBOrwOKyP9fOqhUOVZTRkpPRVZDNzk2RjRJNVlTRkhQS1JCTy4u"
-        onClick={(e) => {
-          e.preventDefault();
-          window.open(e.currentTarget.href, '_blank');
-          setIsOpen(false);
-        }}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Custom Order Form
       </NavLink>
       <NavLink 
         href="/contact" 
