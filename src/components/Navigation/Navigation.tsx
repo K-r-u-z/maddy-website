@@ -306,6 +306,21 @@ const Navigation = () => {
   const navLinks = (
     <>
       <NavLink 
+        href="/" 
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen(false);
+          if (!isHomePage) {
+            router.push('/');
+          } else {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        }}
+        $isActive={isHomePage && activeSection === 'home'}
+      >
+        Home
+      </NavLink>
+      <NavLink 
         href="#about" 
         onClick={(e) => handleLinkClick(e, '#about')} 
         $isActive={isHomePage && activeSection === 'about'}

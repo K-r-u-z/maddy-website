@@ -187,8 +187,8 @@ const About = () => {
           ))}
           <ContactSection>
             <ContactTitle>Need to get in contact with me?</ContactTitle>
-            <ContactLink href="mailto:cakepopsbymaddy@gmail.com">
-              cakepopsbymaddy@gmail.com
+            <ContactLink href="mailto:contact@cakepopsbymaddy.com">
+              contact@cakepopsbymaddy.com
             </ContactLink>
             <ContactLink 
               href="https://www.linkedin.com/in/madelyn-solesbee" 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db/mongodb';
 import MenuItem from '@/models/MenuItem';
+import type { MenuItemDocument } from '@/models/MenuItem';
 
 export async function GET() {
   try {
@@ -15,20 +16,14 @@ export async function GET() {
     // Then fetch the items
     const items = await MenuItem.find({ isVisible: true })
       .select('title description price image isVisible isSoldOut showPrice')
-      .lean()  // Convert to plain JavaScript objects
+      .lean<MenuItemDocument[]>()
       .exec();
     
     // Ensure showPrice is set in the response
     const processedItems = items.map(item => ({
       ...item,
-      showPrice: item.showPrice ?? true  // Default to true if undefined
+      showPrice: item.showPrice ?? true
     }));
-    
-    console.log('Public menu items:', processedItems.map(item => ({
-      id: item._id,
-      title: item.title,
-      showPrice: item.showPrice
-    })));
     
     return NextResponse.json(processedItems);
   } catch (error) {

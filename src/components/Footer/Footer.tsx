@@ -103,7 +103,7 @@ const Footer = () => {
         <FooterSection>
           <FooterTitle>Contact</FooterTitle>
           <FooterLink href="mailto:cakepopsbymaddy@gmail.com">
-            cakepopsbymaddy@gmail.com
+            contact@cakepopsbymaddy.com
           </FooterLink>
           <FooterLink 
             href="https://www.linkedin.com/in/madelyn-solesbee"
