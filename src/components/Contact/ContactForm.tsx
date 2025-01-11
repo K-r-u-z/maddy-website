@@ -86,6 +86,26 @@ const SubmitButton = styled.button`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: ${({ theme }) => theme.colors.error[600]};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  font-size: 0.875rem;
+  padding: ${({ theme }) => theme.spacing.sm};
+  background-color: ${({ theme }) => theme.colors.error[50]};
+  border: 1px solid ${({ theme }) => theme.colors.error[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+`;
+
+const SuccessMessage = styled.div`
+  color: ${({ theme }) => theme.colors.success[600]};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  font-size: 0.875rem;
+  padding: ${({ theme }) => theme.spacing.sm};
+  background-color: ${({ theme }) => theme.colors.success[50]};
+  border: 1px solid ${({ theme }) => theme.colors.success[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+`;
+
 const ContactForm = () => {
   const formId = useId();
   const [formData, setFormData] = useState({
@@ -95,24 +115,39 @@ const ContactForm = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError('');
+    setSuccess('');
 
     try {
-      // Simulate form submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send message');
+      }
+
+      setSuccess('Thank you for your message! We will get back to you soon.');
       setFormData({
         name: '',
         email: '',
         subject: '',
         message: ''
       });
-      alert('Thank you for your message! We will get back to you soon.');
     } catch (error) {
-      alert('There was an error sending your message. Please try again.');
+      setError(error instanceof Error ? error.message : 'Failed to send message');
     } finally {
       setIsSubmitting(false);
     }
@@ -120,6 +155,9 @@ const ContactForm = () => {
 
   return (
     <Form onSubmit={handleSubmit}>
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {success && <SuccessMessage>{success}</SuccessMessage>}
+      
       <FormGroup>
         <Label htmlFor={`${formId}-name`}>Name</Label>
         <Input
@@ -130,6 +168,7 @@ const ContactForm = () => {
           required
         />
       </FormGroup>
+      
       <FormGroup>
         <Label htmlFor={`${formId}-email`}>Email</Label>
         <Input
@@ -140,6 +179,7 @@ const ContactForm = () => {
           required
         />
       </FormGroup>
+      
       <FormGroup>
         <Label htmlFor={`${formId}-subject`}>Subject</Label>
         <Input
@@ -150,6 +190,7 @@ const ContactForm = () => {
           required
         />
       </FormGroup>
+      
       <FormGroup>
         <Label htmlFor={`${formId}-message`}>Message</Label>
         <TextArea
@@ -159,6 +200,7 @@ const ContactForm = () => {
           required
         />
       </FormGroup>
+      
       <SubmitButton type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Sending...' : 'Send Message'}
       </SubmitButton>
