@@ -355,6 +355,16 @@ const Navigation = () => {
       >
         Contact
       </NavLink>
+      <NavLink 
+        href="https://forms.office.com/r/Am1Kfw13KT"
+        onClick={(e) => {
+          e.preventDefault();
+          setIsOpen(false);
+          window.open('https://forms.office.com/r/Am1Kfw13KT', '_blank');
+        }}
+      >
+        Feedback
+      </NavLink>
     </>
   );
 
