@@ -508,57 +508,41 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
     setError('');
 
     try {
-      let imageUrl = imagePreview;
-
-      // Only process new image upload if there is a file selected
-      if (image) {
-        const formData = new FormData();
-        formData.append('file', image);
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!uploadResponse.ok) {
-          throw new Error('Failed to upload image');
-        }
-
-        const uploadData = await uploadResponse.json();
-        imageUrl = uploadData.url;
-      }
-
-      const itemData = {
-        title,
-        description,
-        price,
-        image: imageUrl || null, // Explicitly set to null if empty
-        isVisible: editingItem?.isVisible ?? true,
-        isSoldOut: editingItem?.isSoldOut ?? false,
-        showPrice: editingItem?.showPrice ?? true,
+      const formData = {
+        title: title.trim(),
+        description: description.trim(),
+        price: price.trim(),
+        image: imagePreview || '',
+        isVisible: true,
+        isSoldOut: false,
+        showPrice: true
       };
 
-      const url = editingItem?._id 
-        ? `/api/menu/${editingItem._id}` 
-        : '/api/menu';
+      const url = editingItem?._id ? `/api/menu/${editingItem._id}` : '/api/menu';
+      const method = editingItem?._id ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
-        method: editingItem?._id ? 'PUT' : 'POST',
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(itemData),
+        body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to save menu item');
+        throw new Error(data.error || 'Failed to save menu item');
       }
 
       await fetchItems();
       resetForm();
     } catch (error) {
-      console.error('Error saving menu item:', error);
-      setError(error instanceof Error ? error.message : 'Failed to save menu item');
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Failed to save menu item. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
