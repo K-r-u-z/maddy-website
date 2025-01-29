@@ -18,7 +18,7 @@ export async function GET() {
 
     // Then fetch the items
     const items = await MenuItem.find({ isVisible: true })
-      .select('title description price quantity image isVisible isSoldOut showPrice')
+      .select('title description price quantity priceQuantities image isVisible isSoldOut showPrice')
       .sort({ title: 1 })
       .lean<MenuItemDocument[]>()
       .exec();

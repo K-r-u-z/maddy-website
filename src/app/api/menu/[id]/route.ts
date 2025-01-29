@@ -28,23 +28,40 @@ export async function PUT(
 
     await connectDB();
     const data = await request.json();
+    console.log('Updating menu item with data:', data);
 
-    const updateData = {
+    const updateData: any = {
       title: data.title,
       description: data.description,
-      price: data.price,
-      quantity: data.quantity || '1',
       image: data.image || '',
       isVisible: data.isVisible ?? true,
       isSoldOut: data.isSoldOut ?? false,
       showPrice: data.showPrice ?? true
     };
 
+    // Handle both old and new price/quantity formats
+    if (data.priceQuantities) {
+      updateData.priceQuantities = data.priceQuantities;
+      // Remove old fields if they exist
+      updateData.$unset = { price: "", quantity: "" };
+    } else if (data.price || data.quantity) {
+      updateData.priceQuantities = [{
+        price: data.price || '0',
+        quantity: data.quantity || '1'
+      }];
+      // Remove old fields
+      updateData.$unset = { price: "", quantity: "" };
+    }
+
+    console.log('Final update data:', updateData);
+
     const updatedItem = await MenuItem.findOneAndUpdate(
       { _id: id },
       updateData,
       { new: true, runValidators: true }
     );
+
+    console.log('Updated item:', updatedItem);
 
     if (!updatedItem) {
       return NextResponse.json({ error: 'Menu item not found' }, { status: 404 });

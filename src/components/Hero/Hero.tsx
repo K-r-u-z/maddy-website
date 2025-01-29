@@ -184,6 +184,7 @@ const Hero = () => {
           fill
           priority
           quality={90}
+          sizes="100vw"
         />
       </BackgroundImage>
       <Overlay />
@@ -198,6 +199,7 @@ const Hero = () => {
             fill
             style={{ objectFit: 'contain' }}
             priority
+            sizes="(max-width: 768px) 250px, 400px"
           />
         </LogoContainer>
         <Subtitle>

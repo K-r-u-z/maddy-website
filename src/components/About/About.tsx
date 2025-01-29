@@ -204,6 +204,7 @@ const About = () => {
             src={aboutData?.image || '/images/about.png'}
             alt="Maddy making cake pops"
             fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             style={{ objectFit: 'cover' }}
             priority
           />

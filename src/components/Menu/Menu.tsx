@@ -145,24 +145,38 @@ const MenuItemDescription = styled.p<{ $isSingleItem: boolean }>`
   }
 `;
 
-const Price = styled.p`
-  color: ${({ theme }) => theme.colors.primary[500]};
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0;
-  margin-top: ${({ theme }) => theme.spacing.lg};
+const PriceContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.md};
+`;
 
-  span.quantity {
-    color: ${({ theme }) => theme.colors.neutral[600]};
-    font-size: 0.9em;
-    font-weight: normal;
+const Price = styled.span`
+  font-weight: bold;
+  color: ${({ theme }) => theme.colors.primary[700]};
+  font-size: 1.5rem;
+`;
+
+const QuantitySelect = styled.select`
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border: 2px solid ${({ theme }) => theme.colors.primary[200]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  background-color: white;
+  font-family: ${({ theme }) => theme.fonts.body};
+  font-size: 1rem;
+  color: ${({ theme }) => theme.colors.primary[700]};
+  cursor: pointer;
+  min-width: 80px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary[300]};
   }
 
-  @media (max-width: 768px) {
-    font-size: 1.1rem;
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.colors.primary[400]};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary[100]};
   }
 `;
 
@@ -198,12 +212,18 @@ const SoldOutText = styled.span`
   transform: rotate(-15deg);
 `;
 
+interface PriceQuantityPair {
+  price: string;
+  quantity: string;
+}
+
 interface MenuItem {
   _id: string;
   title: string;
   description: string;
-  price: string;
-  quantity: string;
+  priceQuantities?: PriceQuantityPair[];
+  price?: string;
+  quantity?: string;
   image: string;
   isVisible: boolean;
   isSoldOut: boolean;
@@ -212,6 +232,7 @@ interface MenuItem {
 
 const Menu = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [selectedPriceIndices, setSelectedPriceIndices] = useState<{ [key: string]: number }>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -234,6 +255,13 @@ const Menu = () => {
   const formatPrice = (price: string) => {
     const cleanPrice = price.replace('$', '').trim();
     return cleanPrice.startsWith('$') ? cleanPrice : `$${cleanPrice}`;
+  };
+
+  const handlePriceOptionChange = (itemId: string, index: number) => {
+    setSelectedPriceIndices(prev => ({
+      ...prev,
+      [itemId]: index
+    }));
   };
 
   if (isLoading) {
@@ -269,14 +297,16 @@ const Menu = () => {
         </MenuHeader>
         <MenuGrid $isSingleItem={isSingleItem}>
           {menuItems.map((item) => {
-            console.log('Menu item details:', {
-              id: item._id,
-              title: item.title,
-              price: item.price,
-              quantity: item.quantity,
-              hasQuantity: 'quantity' in item
-            });
+            const priceQuantities = item.priceQuantities?.length ? item.priceQuantities : [{
+              price: item.price || '0',
+              quantity: item.quantity || '1'
+            }];
             
+            const selectedPriceIndex = selectedPriceIndices[item._id] || 0;
+            const selectedPriceQuantity = priceQuantities[selectedPriceIndex];
+            const basePrice = parseFloat(priceQuantities[0].price.replace('$', ''));
+            const currentPrice = basePrice * (parseInt(selectedPriceQuantity.quantity) / parseInt(priceQuantities[0].quantity));
+
             return (
               <MenuItem key={item._id} $hasImage={!!item.image}>
                 {item.image && (
@@ -305,10 +335,22 @@ const Menu = () => {
                     {item.description}
                   </MenuItemDescription>
                   {item.showPrice && (
-                    <Price>
-                      {formatPrice(item.price)}
-                      <span className="quantity">/ {item.quantity}</span>
-                    </Price>
+                    <PriceContainer>
+                      <Price>{formatPrice(currentPrice.toFixed(2))}</Price>
+                      {priceQuantities.length > 0 && (
+                        <QuantitySelect
+                          value={selectedPriceIndex}
+                          onChange={(e) => handlePriceOptionChange(item._id, parseInt(e.target.value))}
+                          disabled={item.isSoldOut}
+                        >
+                          {priceQuantities.map((pq, index) => (
+                            <option key={index} value={index}>
+                              {pq.quantity} count
+                            </option>
+                          ))}
+                        </QuantitySelect>
+                      )}
+                    </PriceContainer>
                   )}
                   {item.isSoldOut && !item.image && (
                     <SoldOutText style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>

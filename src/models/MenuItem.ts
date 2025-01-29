@@ -1,15 +1,30 @@
 import mongoose from 'mongoose';
 
+interface PriceQuantityPair {
+  price: string;
+  quantity: string;
+}
+
 export interface MenuItemDocument extends mongoose.Document {
   title: string;
   description: string;
-  price: string;
-  quantity: string;
+  priceQuantities: PriceQuantityPair[];
   image?: string;
   isVisible: boolean;
   isSoldOut: boolean;
   showPrice: boolean;
 }
+
+const priceQuantitySchema = new mongoose.Schema({
+  price: {
+    type: String,
+    required: true,
+  },
+  quantity: {
+    type: String,
+    required: true,
+  }
+}, { _id: false });
 
 const menuItemSchema = new mongoose.Schema({
   title: {
@@ -20,14 +35,10 @@ const menuItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  price: {
-    type: String,
+  priceQuantities: {
+    type: [priceQuantitySchema],
     required: true,
-  },
-  quantity: {
-    type: String,
-    required: true,
-    default: '1'
+    default: [{ price: '0', quantity: '1' }]
   },
   image: {
     type: String,
