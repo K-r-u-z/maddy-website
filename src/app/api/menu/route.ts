@@ -24,42 +24,29 @@ export async function POST(request: Request) {
 
     await connectDB();
     const data = await request.json();
-    
-    // Validate required fields
-    const missingFields = [];
-    if (!data.title) missingFields.push('title');
-    if (!data.description) missingFields.push('description');
-    if (!data.price) missingFields.push('price');
+    console.log('Creating new item with data:', data);
 
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(', ')}` },
-        { status: 400 }
-      );
-    }
+    // Create new item with explicit fields
+    const newItem = new MenuItem({
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      quantity: data.quantity || '1',
+      image: data.image || '',
+      isVisible: data.isVisible ?? true,
+      isSoldOut: data.isSoldOut ?? false,
+      showPrice: data.showPrice ?? true
+    });
 
-    // Create the item
-    try {
-      const item = await MenuItem.create({
-        title: data.title.trim(),
-        description: data.description.trim(),
-        price: data.price.trim(),
-        image: data.image || '',
-        isVisible: data.isVisible ?? true,
-        isSoldOut: data.isSoldOut ?? false,
-        showPrice: data.showPrice ?? true
-      });
-      
-      return NextResponse.json(item, { status: 201 });
-    } catch (dbError) {
-      return NextResponse.json(
-        { error: 'Database error: ' + (dbError instanceof Error ? dbError.message : 'Unknown error') },
-        { status: 500 }
-      );
-    }
+    console.log('New item before save:', newItem);
+    const savedItem = await newItem.save();
+    console.log('Saved item:', savedItem);
+
+    return NextResponse.json(savedItem);
   } catch (error) {
+    console.error('Error creating menu item:', error);
     return NextResponse.json(
-      { error: 'Server error: ' + (error instanceof Error ? error.message : 'Unknown error') },
+      { error: 'Error creating menu item' },
       { status: 500 }
     );
   }

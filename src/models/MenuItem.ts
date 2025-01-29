@@ -4,6 +4,7 @@ export interface MenuItemDocument extends mongoose.Document {
   title: string;
   description: string;
   price: string;
+  quantity: string;
   image?: string;
   isVisible: boolean;
   isSoldOut: boolean;
@@ -23,9 +24,14 @@ const menuItemSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  quantity: {
+    type: String,
+    required: true,
+    default: '1'
+  },
   image: {
     type: String,
-    required: false,
+    default: ''
   },
   isVisible: {
     type: Boolean,

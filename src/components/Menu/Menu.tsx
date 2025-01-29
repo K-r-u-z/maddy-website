@@ -112,18 +112,11 @@ const StyledImage = styled(Image)`
   object-fit: cover;
 `;
 
-const MenuItemContent = styled.div<{ $isSingleItem?: boolean; $hasImage?: boolean }>`
-  padding: ${({ theme }) => theme.spacing.xl};
-  flex: 1;
+const MenuItemContent = styled.div`
+  padding: ${({ theme }) => theme.spacing.lg};
   display: flex;
   flex-direction: column;
-  justify-content: ${({ $hasImage }) => $hasImage ? 'flex-start' : 'center'};
-  
-  ${({ $isSingleItem, theme }) =>
-    $isSingleItem &&
-    css`
-      padding: ${theme.spacing['2xl']};
-    `}
+  flex: 1;
 `;
 
 const MenuItemTitle = styled.h3<{ $isSingleItem: boolean }>`
@@ -131,6 +124,7 @@ const MenuItemTitle = styled.h3<{ $isSingleItem: boolean }>`
   font-size: ${({ $isSingleItem }) => $isSingleItem ? '1.75rem' : '1.5rem'};
   color: ${({ theme }) => theme.colors.primary[700]};
   margin: 0;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
 
   @media (max-width: 768px) {
     font-size: ${({ $isSingleItem }) => $isSingleItem ? '1.5rem' : '1.25rem'};
@@ -142,6 +136,7 @@ const MenuItemDescription = styled.p<{ $isSingleItem: boolean }>`
   font-size: ${({ $isSingleItem }) => $isSingleItem ? '1.1rem' : '1rem'};
   line-height: 1.6;
   margin: 0;
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
   flex: 1;
 
   @media (max-width: 768px) {
@@ -150,15 +145,24 @@ const MenuItemDescription = styled.p<{ $isSingleItem: boolean }>`
   }
 `;
 
-const MenuItemPrice = styled.p<{ $isSingleItem: boolean }>`
+const Price = styled.p`
   color: ${({ theme }) => theme.colors.primary[500]};
-  font-size: ${({ $isSingleItem }) => $isSingleItem ? '1.5rem' : '1.25rem'};
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  margin-top: auto;
+  margin-top: ${({ theme }) => theme.spacing.lg};
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+
+  span.quantity {
+    color: ${({ theme }) => theme.colors.neutral[600]};
+    font-size: 0.9em;
+    font-weight: normal;
+  }
 
   @media (max-width: 768px) {
-    font-size: ${({ $isSingleItem }) => $isSingleItem ? '1.25rem' : '1.1rem'};
+    font-size: 1.1rem;
   }
 `;
 
@@ -199,6 +203,7 @@ interface MenuItem {
   title: string;
   description: string;
   price: string;
+  quantity: string;
   image: string;
   isVisible: boolean;
   isSoldOut: boolean;
@@ -207,34 +212,19 @@ interface MenuItem {
 
 const Menu = () => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
-        setLoading(true);
-        console.log('Fetching menu items...');
-        
         const response = await fetch('/api/public/menu');
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
         const data = await response.json();
-        console.log('Received menu items:', data);
-        
-        if (data.error) {
-          throw new Error(data.error);
-        }
-        
+        console.log('Fetched menu items:', data);
         setMenuItems(data);
       } catch (error) {
         console.error('Error fetching menu items:', error);
-        setMenuItems([]);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -246,7 +236,7 @@ const Menu = () => {
     return cleanPrice.startsWith('$') ? cleanPrice : `$${cleanPrice}`;
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <MenuSection id="menu">
         <MenuContainer>
@@ -265,6 +255,8 @@ const Menu = () => {
 
   const isSingleItem = menuItems.length === 1;
 
+  console.log('Rendering menu items:', menuItems);
+
   return (
     <MenuSection id="menu">
       <MenuContainer>
@@ -276,49 +268,57 @@ const Menu = () => {
           </MenuDescription>
         </MenuHeader>
         <MenuGrid $isSingleItem={isSingleItem}>
-          {menuItems.map((item) => (
-            <MenuItem key={item._id} $hasImage={!!item.image}>
-              {item.image && (
-                <MenuImageContainer $hasImage={true}>
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    sizes={isSingleItem ? '500px' : '300px'}
-                    priority={isSingleItem}
-                    style={{ 
-                      objectFit: 'cover',
-                      opacity: item.isSoldOut ? 0.7 : 1 
-                    }}
-                  />
-                  {item.isSoldOut && (
-                    <SoldOutOverlay>
-                      <SoldOutText>Sold Out</SoldOutText>
-                    </SoldOutOverlay>
+          {menuItems.map((item) => {
+            console.log('Menu item details:', {
+              id: item._id,
+              title: item.title,
+              price: item.price,
+              quantity: item.quantity,
+              hasQuantity: 'quantity' in item
+            });
+            
+            return (
+              <MenuItem key={item._id} $hasImage={!!item.image}>
+                {item.image && (
+                  <MenuImageContainer $hasImage={true}>
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      sizes={isSingleItem ? '500px' : '300px'}
+                      priority={isSingleItem}
+                      style={{ 
+                        objectFit: 'cover',
+                        opacity: item.isSoldOut ? 0.7 : 1 
+                      }}
+                    />
+                    {item.isSoldOut && (
+                      <SoldOutOverlay>
+                        <SoldOutText>Sold Out</SoldOutText>
+                      </SoldOutOverlay>
+                    )}
+                  </MenuImageContainer>
+                )}
+                <MenuItemContent>
+                  <MenuItemTitle $isSingleItem={isSingleItem}>{item.title}</MenuItemTitle>
+                  <MenuItemDescription $isSingleItem={isSingleItem}>
+                    {item.description}
+                  </MenuItemDescription>
+                  {item.showPrice && (
+                    <Price>
+                      {formatPrice(item.price)}
+                      <span className="quantity">/ {item.quantity}</span>
+                    </Price>
                   )}
-                </MenuImageContainer>
-              )}
-              <MenuItemContent 
-                $isSingleItem={isSingleItem} 
-                $hasImage={!!item.image}
-              >
-                <MenuItemTitle $isSingleItem={isSingleItem}>{item.title}</MenuItemTitle>
-                <MenuItemDescription $isSingleItem={isSingleItem}>
-                  {item.description}
-                </MenuItemDescription>
-                {item.showPrice && (
-                  <MenuItemPrice $isSingleItem={isSingleItem}>
-                    {formatPrice(item.price)}
-                  </MenuItemPrice>
-                )}
-                {item.isSoldOut && !item.image && (
-                  <SoldOutText style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
-                    Sold Out
-                  </SoldOutText>
-                )}
-              </MenuItemContent>
-            </MenuItem>
-          ))}
+                  {item.isSoldOut && !item.image && (
+                    <SoldOutText style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>
+                      Sold Out
+                    </SoldOutText>
+                  )}
+                </MenuItemContent>
+              </MenuItem>
+            );
+          })}
         </MenuGrid>
       </MenuContainer>
     </MenuSection>

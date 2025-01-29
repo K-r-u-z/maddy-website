@@ -10,6 +10,7 @@ interface MenuItem {
   title: string;
   description: string;
   price: string;
+  quantity: string;
   image: string;
   isVisible: boolean;
   isSoldOut: boolean;
@@ -160,6 +161,7 @@ const TextArea = styled.textarea`
 
 const ItemCard = styled.div`
   background: white;
+  padding: ${({ theme }) => theme.spacing.lg};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -200,8 +202,17 @@ const ItemDescription = styled.p`
 `;
 
 const ItemPrice = styled.p`
-  color: ${({ theme }) => theme.colors.primary[500]};
-  font-weight: 600;
+  font-weight: bold;
+  margin: ${({ theme }) => theme.spacing.sm} 0;
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+
+  span.quantity {
+    color: ${({ theme }) => theme.colors.neutral[600]};
+    font-size: 0.9em;
+    font-weight: normal;
+  }
 `;
 
 const IconButton = styled.button`
@@ -337,6 +348,12 @@ const RemoveImageButton = styled(Button)`
   }
 `;
 
+const PriceQuantityGroup = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: ${({ theme }) => theme.spacing.md};
+`;
+
 interface MenuItemCardProps {
   item: MenuItem;
   onDelete: (id: string) => Promise<void>;
@@ -371,7 +388,10 @@ const MenuItemCard: React.FC<MenuItemCardProps> = ({
     <ItemContent>
       <ItemTitle>{item.title}</ItemTitle>
       <ItemDescription>{item.description}</ItemDescription>
-      <ItemPrice>${item.price}</ItemPrice>
+      <ItemPrice>
+        ${item.price}
+        <span className="quantity">/ {item.quantity || '1'}</span>
+      </ItemPrice>
       <ButtonGroup>
         <VisibilityToggle
           onClick={async (e) => {
@@ -445,6 +465,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -473,6 +494,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
     setTitle('');
     setDescription('');
     setPrice('');
+    setQuantity('1');
     setImage(null);
     setImagePreview('');
     setEditingItem(null);
@@ -495,11 +517,13 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
   };
 
   const handleEdit = (item: MenuItem) => {
+    console.log('Editing item:', item); // Debug log
     setEditingItem(item);
     setTitle(item.title);
     setDescription(item.description);
     setPrice(item.price);
-    setImagePreview(item.image);
+    setQuantity(item.quantity || '1'); // Ensure quantity is loaded
+    setImagePreview(item.image || '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -512,14 +536,17 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
         title: title.trim(),
         description: description.trim(),
         price: price.trim(),
+        quantity: quantity.trim() || '1',
         image: imagePreview || '',
-        isVisible: true,
-        isSoldOut: false,
-        showPrice: true
+        isVisible: editingItem?.isVisible ?? true,
+        isSoldOut: editingItem?.isSoldOut ?? false,
+        showPrice: editingItem?.showPrice ?? true
       };
 
       const url = editingItem?._id ? `/api/menu/${editingItem._id}` : '/api/menu';
       const method = editingItem?._id ? 'PUT' : 'POST';
+
+      console.log('Submitting form data:', formData);
 
       const response = await fetch(url, {
         method,
@@ -530,14 +557,23 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
       });
 
       const data = await response.json();
+      console.log('Response:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to save menu item');
       }
 
-      await fetchItems();
+      // Update local state with the returned data
+      setMenuItems(prevItems => 
+        prevItems.map(item => 
+          item._id === data._id ? data : item
+        )
+      );
+
+      await fetchItems(); // Refresh the list
       resetForm();
     } catch (error) {
+      console.error('Submit error:', error);
       if (error instanceof Error) {
         setError(error.message);
       } else {
@@ -667,6 +703,7 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
                 title: '', 
                 description: '', 
                 price: '', 
+                quantity: '1',
                 image: '',
                 isVisible: true,
                 isSoldOut: false,
@@ -715,24 +752,39 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
             />
           </FormGroup>
           <FormGroup>
-            <Label htmlFor="price">Price</Label>
-            <PriceInputGroup>
-              <PricePrefix>$</PricePrefix>
-              <PriceInput
-                id="price"
-                name="price"
-                value={price}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^\d.]/g, '');
-                  const parts = value.split('.');
-                  if (parts.length > 2) return;
-                  if (parts[1] && parts[1].length > 2) return;
-                  setPrice(value);
-                }}
-                placeholder="0.00"
-                required
-              />
-            </PriceInputGroup>
+            <PriceQuantityGroup>
+              <div>
+                <Label htmlFor="price">Price</Label>
+                <PriceInputGroup>
+                  <PricePrefix>$</PricePrefix>
+                  <PriceInput
+                    id="price"
+                    name="price"
+                    value={price}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d.]/g, '');
+                      const parts = value.split('.');
+                      if (parts.length > 2) return;
+                      if (parts[1] && parts[1].length > 2) return;
+                      setPrice(value);
+                    }}
+                    placeholder="0.00"
+                    required
+                  />
+                </PriceInputGroup>
+              </div>
+              <div>
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="e.g., 6 pcs"
+                  required
+                />
+              </div>
+            </PriceQuantityGroup>
           </FormGroup>
           <FormGroup>
             <Label>Image (Optional)</Label>

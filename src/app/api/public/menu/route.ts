@@ -7,6 +7,9 @@ export async function GET() {
   try {
     await connectDB();
     
+    // Add debug log
+    console.log('Fetching menu items from database');
+    
     // First ensure all items have showPrice set
     await MenuItem.updateMany(
       { showPrice: { $exists: false } },
@@ -15,9 +18,13 @@ export async function GET() {
 
     // Then fetch the items
     const items = await MenuItem.find({ isVisible: true })
-      .select('title description price image isVisible isSoldOut showPrice')
+      .select('title description price quantity image isVisible isSoldOut showPrice')
+      .sort({ title: 1 })
       .lean<MenuItemDocument[]>()
       .exec();
+    
+    // Add debug log
+    console.log('Found items:', items);
     
     // Ensure showPrice is set in the response
     const processedItems = items.map(item => ({
@@ -27,7 +34,10 @@ export async function GET() {
     
     return NextResponse.json(processedItems);
   } catch (error) {
-    console.error('MongoDB Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('Error fetching menu items:', error);
+    return NextResponse.json(
+      { error: 'Error fetching menu items' },
+      { status: 500 }
+    );
   }
 } 
