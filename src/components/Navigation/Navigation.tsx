@@ -61,6 +61,10 @@ const Logo = styled.div`
   transition: transform 0.2s ease;
   z-index: 60;
 
+  img {
+    filter: brightness(0);
+  }
+
   &:hover {
     transform: scale(1.05);
   }
