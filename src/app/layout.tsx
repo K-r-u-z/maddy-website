@@ -1,6 +1,7 @@
 import { Inter, Playfair_Display } from 'next/font/google'
 import StyledComponentsRegistry from '../lib/styled-components'
 import { NextAuthProvider } from '@/providers/NextAuthProvider'
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -44,6 +45,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <StyledComponentsRegistry>
             {children}
+            <Analytics />
           </StyledComponentsRegistry>
         </NextAuthProvider>
       </body>
