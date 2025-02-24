@@ -21,7 +21,7 @@ export const SprinkleContainer = () => {
       $y: pos.y,
       $rotation: pos.rotation,
       $delay: pos.delay,
-      $color: i % 2 ? theme.colors.primary[300] : theme.colors.secondary[300],
+      $color: i % 2 ? theme.colors.primary[100] : theme.colors.secondary[100],
       key: i,
     }));
   }, [theme]);

@@ -67,7 +67,7 @@ export default function Contact() {
             <ContactHeader>
               <Title>Contact Us</Title>
               <Description>
-                Have a question or want to place an order? Send us a message and we'll get back to you as soon as possible.
+                Have a custom order request, or a a question? Send us a message, and we'll get back to you as soon as possible!
               </Description>
             </ContactHeader>
             <ContactForm />

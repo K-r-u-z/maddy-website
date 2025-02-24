@@ -41,8 +41,8 @@ const Overlay = styled.div`
   bottom: 0;
   background: linear-gradient(
     to bottom,
-    ${({ theme }) => `${theme.colors.neutral[900]}E6`},
-    ${({ theme }) => `${theme.colors.neutral[800]}E6`}
+    ${({ theme }) => `${theme.colors.neutral[900]}99`},
+    ${({ theme }) => `${theme.colors.neutral[800]}99`}
   );
   z-index: 2;
 `;
@@ -144,18 +144,11 @@ const CTAButton = styled.button`
 `;
 
 const SecondaryButton = styled(CTAButton)`
-  background-color: transparent;
+  background-color: white;
   color: ${({ theme }) => theme.colors.primary[500]};
-  border: 2px solid ${({ theme }) => theme.colors.primary[500]};
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.primary[500]};
-    color: white;
-    border-color: ${({ theme }) => theme.colors.primary[500]};
-  }
-
-  @media (max-width: 768px) {
-    border-width: 2px;
+    background-color: ${({ theme }) => theme.colors.primary[600]};
   }
 `;
 

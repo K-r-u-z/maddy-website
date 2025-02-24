@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useId } from 'react';
 import styled from 'styled-components';
+import Image from 'next/image';
 
 const Form = styled.form`
   background: white;
@@ -106,6 +107,78 @@ const SuccessMessage = styled.div`
   border-radius: ${({ theme }) => theme.borderRadius.md};
 `;
 
+const ImageUploadContainer = styled.div`
+  margin-bottom: ${({ theme }) => theme.spacing.xl};
+`;
+
+const ImagePreviewGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-top: ${({ theme }) => theme.spacing.md};
+`;
+
+const ImagePreviewContainer = styled.div`
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  overflow: hidden;
+  border: 2px solid ${({ theme }) => theme.colors.primary[200]};
+`;
+
+const ImagePreview = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+`;
+
+const RemoveImageButton = styled.button`
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: ${({ theme }) => theme.colors.error[500]};
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.error[600]};
+  }
+`;
+
+const FileInput = styled.input`
+  display: none;
+`;
+
+const UploadButton = styled.button`
+  background: transparent;
+  border: 2px dashed ${({ theme }) => theme.colors.primary[300]};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  padding: ${({ theme }) => theme.spacing.lg};
+  width: 100%;
+  color: ${({ theme }) => theme.colors.primary[600]};
+  font-family: ${({ theme }) => theme.fonts.body};
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary[50]};
+    border-color: ${({ theme }) => theme.colors.primary[400]};
+  }
+`;
+
 const ContactForm = () => {
   const formId = useId();
   const [formData, setFormData] = useState({
@@ -114,9 +187,32 @@ const ContactForm = () => {
     subject: '',
     message: ''
   });
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newImages = [...images, ...files];
+    setImages(newImages);
+
+    // Create preview URLs for new images
+    const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+    setImagePreviewUrls([...imagePreviewUrls, ...newPreviewUrls]);
+  };
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    const newPreviewUrls = imagePreviewUrls.filter((_, i) => i !== index);
+    
+    // Revoke the URL to prevent memory leaks
+    URL.revokeObjectURL(imagePreviewUrls[index]);
+    
+    setImages(newImages);
+    setImagePreviewUrls(newPreviewUrls);
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -125,12 +221,19 @@ const ContactForm = () => {
     setSuccess('');
 
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('name', formData.name);
+      formDataToSend.append('email', formData.email);
+      formDataToSend.append('subject', formData.subject);
+      formDataToSend.append('message', formData.message);
+      
+      images.forEach((image, index) => {
+        formDataToSend.append('images', image);
+      });
+
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
       const data = await response.json();
@@ -145,6 +248,11 @@ const ContactForm = () => {
         email: '',
         subject: '',
         message: ''
+      });
+      setImages([]);
+      setImagePreviewUrls(urls => {
+        urls.forEach(url => URL.revokeObjectURL(url));
+        return [];
       });
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to send message');
@@ -200,6 +308,47 @@ const ContactForm = () => {
           required
         />
       </FormGroup>
+
+      <ImageUploadContainer>
+        <Label>Have reference picture(s)?</Label>
+        <FileInput
+          type="file"
+          id={`${formId}-images`}
+          accept="image/*"
+          multiple
+          onChange={handleImageChange}
+        />
+        <UploadButton
+          type="button"
+          onClick={() => document.getElementById(`${formId}-images`)?.click()}
+        >
+          Click to upload images
+        </UploadButton>
+        
+        {imagePreviewUrls.length > 0 && (
+          <ImagePreviewGrid>
+            {imagePreviewUrls.map((url, index) => (
+              <ImagePreviewContainer key={url}>
+                <RemoveImageButton
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  aria-label="Remove image"
+                >
+                  ×
+                </RemoveImageButton>
+                <ImagePreview>
+                  <Image
+                    src={url}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    style={{ objectFit: 'cover' }}
+                  />
+                </ImagePreview>
+              </ImagePreviewContainer>
+            ))}
+          </ImagePreviewGrid>
+        )}
+      </ImageUploadContainer>
       
       <SubmitButton type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Sending...' : 'Send Message'}
