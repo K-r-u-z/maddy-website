@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import styled from 'styled-components';
 import Layout from '@/components/Layout/Layout';
+import PasswordResetModal from '@/components/Admin/PasswordResetModal';
 
 const LoginContainer = styled.div`
   min-height: calc(100vh - 70px);
@@ -66,6 +68,20 @@ const ErrorMessage = styled.p`
   text-align: center;
 `;
 
+const ResetButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.primary[600]};
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: ${({ theme }) => theme.spacing.md};
+  font-size: 0.9em;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors.primary[800]};
+  }
+`;
+
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -73,12 +89,28 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [adminExists, setAdminExists] = useState<boolean | null>(null);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
     if (status === 'authenticated') {
       router.push('/admin');
     }
   }, [status, router]);
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch('/api/admin/check');
+        const data = await response.json();
+        setAdminExists(data.exists);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+
+    checkAdmin();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,27 +144,42 @@ export default function Login() {
   return (
     <Layout>
       <LoginContainer>
-        <LoginForm onSubmit={handleSubmit}>
-          <Title>Admin Login</Title>
-          {error && <ErrorMessage>{error}</ErrorMessage>}
-          <Input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
-          </Button>
-        </LoginForm>
+        {adminExists === false ? (
+          <div>
+            <p>No admin account exists yet.</p>
+            <Link href="/admin/setup">
+              <Button>Setup Admin Account</Button>
+            </Link>
+          </div>
+        ) : (
+          <LoginForm onSubmit={handleSubmit}>
+            <Title>Admin Login</Title>
+            {error && <ErrorMessage>{error}</ErrorMessage>}
+            <Input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Logging in...' : 'Login'}
+            </Button>
+            <ResetButton type="button" onClick={() => setShowResetModal(true)}>
+              Reset Password
+            </ResetButton>
+          </LoginForm>
+        )}
+        {showResetModal && (
+          <PasswordResetModal onClose={() => setShowResetModal(false)} />
+        )}
       </LoginContainer>
     </Layout>
   );
