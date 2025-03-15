@@ -1,11 +1,11 @@
 # Cake Pops by Maddy
 
-A modern, responsive website for a cake pop business built with Next.js 14, TypeScript, and Tailwind CSS.
+A modern, responsive website for a cake pop business built with Next.js 15, TypeScript, and Tailwind CSS.
 
 ## Features
 
 - 🎨 Modern, responsive design
-- ⚡ Built with Next.js 14 for optimal performance
+- ⚡ Built with Next.js 15 for optimal performance
 - 🎯 TypeScript for type safety
 - 💅 Tailwind CSS for styling
 - 🔤 Custom fonts (Geist and Geist Mono)
@@ -40,8 +40,6 @@ pnpm install
 ```bash
 MONGODB_URI= 
 NEXTAUTH_SECRET= 
-ADMIN_USERNAME= 
-ADMIN_PASSWORD= 
 NEXTAUTH_URL= 
 ```
 
