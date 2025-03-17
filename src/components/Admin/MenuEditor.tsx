@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import styled, { useTheme } from 'styled-components';
 import Image from 'next/image';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import imageCompression from 'browser-image-compression';
 
 interface PriceQuantityPair {
   price: string;
@@ -534,15 +535,31 @@ const MenuEditor = ({ onLoad }: MenuEditorProps) => {
     setError('');
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        // Compression options
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        };
+
+        // Compress the image
+        const compressedFile = await imageCompression(file, options);
+        setImage(compressedFile);
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string);
+        };
+        reader.readAsDataURL(compressedFile);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        alert('Error processing image. Please try again with a different image.');
+      }
     }
   };
 
