@@ -25,17 +25,26 @@ async function connectDB() {
   }
 
   if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-      maxPoolSize: 5,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 5000,
-      connectTimeoutMS: 5000,
-      family: 4
+    const opts: mongoose.ConnectOptions = {
+      bufferCommands: true,
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 30000,
+      connectTimeoutMS: 30000,
+      maxIdleTimeMS: 60000,
+      family: 4,
+      maxStalenessSeconds: 300,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI as string, opts)
-      .then(mongoose => mongoose.connection);
+      .then(mongoose => {
+        console.log('MongoDB connected successfully');
+        return mongoose.connection;
+      })
+      .catch(err => {
+        console.error('MongoDB connection error:', err);
+        throw err;
+      });
   }
 
   try {
