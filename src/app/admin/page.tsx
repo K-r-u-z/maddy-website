@@ -10,6 +10,7 @@ import FAQEditor from '@/components/Admin/FAQEditor';
 import Navigation from '@/components/Admin/Navigation';
 import AboutEditor from '@/components/Admin/AboutEditor';
 import EmailResponder from '@/components/Admin/EmailResponder';
+import ContactEditor from '@/components/Admin/ContactEditor';
 
 const AdminContainer = styled.div`
   min-height: 100vh;
@@ -163,6 +164,12 @@ export default function AdminDashboard() {
               About
             </Tab>
             <Tab 
+              $isActive={activeTab === 'contact'} 
+              onClick={() => setActiveTab('contact')}
+            >
+              Contact
+            </Tab>
+            <Tab 
               $isActive={activeTab === 'email'} 
               onClick={() => setActiveTab('email')}
             >
@@ -179,6 +186,7 @@ export default function AdminDashboard() {
               {activeTab === 'orderSteps' && <OrderStepsEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'faq' && <FAQEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'about' && <AboutEditor onLoad={() => setIsDataLoading(false)} />}
+              {activeTab === 'contact' && <ContactEditor onLoad={() => setIsDataLoading(false)} />}
               {activeTab === 'email' && <EmailResponder onLoad={() => setIsDataLoading(false)} />}
             </div>
           </EditorContainer>

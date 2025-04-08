@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import styled from 'styled-components';
 import Layout from '@/components/Layout/Layout';
 import ContactForm from '@/components/Contact/ContactForm';
@@ -59,6 +59,27 @@ const Description = styled.p`
 `;
 
 export default function Contact() {
+  const [description, setDescription] = useState('Have a custom order request, or a a question? Send us a message, and we\'ll get back to you as soon as possible!');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContactDescription = async () => {
+      try {
+        const response = await fetch('/api/contact-page');
+        const data = await response.json();
+        if (data.description) {
+          setDescription(data.description);
+        }
+      } catch (error) {
+        console.error('Error fetching contact description:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContactDescription();
+  }, []);
+
   return (
     <Layout>
       <Suspense fallback={<div>Loading...</div>}>
@@ -67,7 +88,7 @@ export default function Contact() {
             <ContactHeader>
               <Title>Contact Us</Title>
               <Description>
-                Have a custom order request, or a a question? Send us a message, and we'll get back to you as soon as possible!
+                {isLoading ? 'Loading...' : description}
               </Description>
             </ContactHeader>
             <ContactForm />
