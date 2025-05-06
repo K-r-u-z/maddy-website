@@ -178,6 +178,10 @@ const OrderButton = styled.button`
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
 
   &:hover {
     background-color: ${({ theme }) => theme.colors.primary[600]};
@@ -186,7 +190,58 @@ const OrderButton = styled.button`
   }
 
   @media (max-width: ${MOBILE_BREAKPOINT}) {
-    display: none;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    margin-top: ${({ theme }) => theme.spacing.md};
+  }
+`;
+
+const DropdownArrow = styled.span<{ $isOpen: boolean }>`
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid white;
+  transition: transform 0.2s ease;
+  transform: ${({ $isOpen }) => ($isOpen ? 'rotate(180deg)' : 'rotate(0)')};
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: ${({ theme }) => theme.spacing.sm};
+  background-color: white;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    position: static;
+    margin-top: ${({ theme }) => theme.spacing.sm};
+    width: 100%;
+    box-shadow: none;
+    border: 1px solid ${({ theme }) => theme.colors.primary[200]};
+  }
+`;
+
+const DropdownItem = styled.a`
+  padding: ${({ theme }) => theme.spacing.md};
+  color: ${({ theme }) => theme.colors.primary[900]};
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.colors.primary[50]};
+    color: ${({ theme }) => theme.colors.primary[700]};
   }
 `;
 
@@ -238,6 +293,7 @@ const MenuButton = styled.button<MobileMenuProps>`
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [isOrderDropdownOpen, setIsOrderDropdownOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const isHomePage = pathname === '/';
@@ -300,7 +356,12 @@ const Navigation = () => {
   };
 
   const handleOrderClick = () => {
-    window.open('https://forms.office.com/Pages/ResponsePage.aspx?id=JUduhRIIxEabGTNNLgMYdOiXhLZCYHBOrwOKyP9fOqhUOVZTRkpPRVZDNzk2RjRJNVlTRkhQS1JCTy4u', '_blank');
+    setIsOrderDropdownOpen(!isOrderDropdownOpen);
+  };
+
+  const handleOrderOptionClick = (url: string) => {
+    setIsOrderDropdownOpen(false);
+    window.open(url, '_blank');
   };
 
   const navLinks = (
@@ -381,7 +442,20 @@ const Navigation = () => {
         </Logo>
         <DesktopNav>
           {navLinks}
-          <OrderButton onClick={handleOrderClick}>Order Now</OrderButton>
+          <OrderButton onClick={handleOrderClick}>
+            Order Now
+            <DropdownArrow $isOpen={isOrderDropdownOpen} />
+            {isOrderDropdownOpen && (
+              <DropdownMenu>
+                <DropdownItem onClick={() => handleOrderOptionClick('https://docs.google.com/forms/d/e/1FAIpQLSer1nVptxBtb3IGkv7fW2w2Qy22Y2zWoY48R2hHGnhwURdHBg/viewform?usp=dialog')}>
+                  Standard Order
+                </DropdownItem>
+                <DropdownItem onClick={() => handleOrderOptionClick('https://docs.google.com/forms/d/e/1FAIpQLSdyt4I5Ii58i-Sn_RfrTiungQvdo18Wl9G2phaK6hhAKnFfsQ/viewform?usp=dialog')}>
+                  Custom Order
+                </DropdownItem>
+              </DropdownMenu>
+            )}
+          </OrderButton>
         </DesktopNav>
         <MenuButton $isOpen={isOpen} onClick={() => setIsOpen(!isOpen)}>
           <span />
@@ -392,6 +466,20 @@ const Navigation = () => {
       <MobileNav $isOpen={isOpen}>
         <MobileNavContent>
           {navLinks}
+          <OrderButton onClick={handleOrderClick}>
+            Order Now
+            <DropdownArrow $isOpen={isOrderDropdownOpen} />
+            {isOrderDropdownOpen && (
+              <DropdownMenu>
+                <DropdownItem onClick={() => handleOrderOptionClick('https://docs.google.com/forms/d/e/1FAIpQLSer1nVptxBtb3IGkv7fW2w2Qy22Y2zWoY48R2hHGnhwURdHBg/viewform?usp=dialog')}>
+                  Standard Order
+                </DropdownItem>
+                <DropdownItem onClick={() => handleOrderOptionClick('https://docs.google.com/forms/d/e/1FAIpQLSdyt4I5Ii58i-Sn_RfrTiungQvdo18Wl9G2phaK6hhAKnFfsQ/viewform?usp=dialog')}>
+                  Custom Order
+                </DropdownItem>
+              </DropdownMenu>
+            )}
+          </OrderButton>
         </MobileNavContent>
       </MobileNav>
     </Nav>

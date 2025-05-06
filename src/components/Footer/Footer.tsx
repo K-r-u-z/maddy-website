@@ -99,6 +99,7 @@ const Footer = () => {
           <FooterLink href="#menu">Menu</FooterLink>
           <FooterLink href="#how-to-order">How to Order</FooterLink>
           <FooterLink href="#faq">FAQ</FooterLink>
+          <FooterLink href="/privacy-policy">Privacy Policy</FooterLink>
         </FooterSection>
         <FooterSection>
           <FooterTitle>Contact</FooterTitle>
