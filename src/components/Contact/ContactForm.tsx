@@ -4,6 +4,11 @@ import { useState, FormEvent, useId } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image';
 
+// Constants for file validation
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+const MAX_TOTAL_SIZE = 20 * 1024 * 1024; // 20MB total
+const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
 const Form = styled.form`
   background: white;
   padding: ${({ theme }) => theme.spacing['2xl']};
@@ -193,14 +198,102 @@ const ContactForm = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const newImages = [...images, ...files];
-    setImages(newImages);
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Calculate new dimensions while maintaining aspect ratio
+          const maxDimension = 1200; // Max width/height
+          if (width > height && width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
 
-    // Create preview URLs for new images
-    const newPreviewUrls = files.map(file => URL.createObjectURL(file));
-    setImagePreviewUrls([...imagePreviewUrls, ...newPreviewUrls]);
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob with quality 0.8
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: file.type,
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('Failed to compress image'));
+              }
+            },
+            file.type,
+            0.8
+          );
+        };
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+  };
+
+  const validateFiles = (files: File[]): string | null => {
+    // Check total size
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+    if (totalSize > MAX_TOTAL_SIZE) {
+      return `Total upload size exceeds ${MAX_TOTAL_SIZE / (1024 * 1024)}MB`;
+    }
+
+    // Check individual file sizes and types
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        return `File ${file.name} exceeds ${MAX_FILE_SIZE / (1024 * 1024)}MB`;
+      }
+      if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        return `File ${file.name} is not a supported image type`;
+      }
+    }
+
+    return null;
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    // Validate files
+    const validationError = validateFiles(files);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    try {
+      // Compress images
+      const compressedFiles = await Promise.all(files.map(compressImage));
+      
+      // Update state with compressed files
+      const newImages = [...images, ...compressedFiles];
+      setImages(newImages);
+
+      // Create preview URLs for new images
+      const newPreviewUrls = compressedFiles.map(file => URL.createObjectURL(file));
+      setImagePreviewUrls([...imagePreviewUrls, ...newPreviewUrls]);
+      
+      setError(''); // Clear any previous errors
+    } catch (error) {
+      setError('Failed to process images. Please try again.');
+      console.error('Image processing error:', error);
+    }
   };
 
   const removeImage = (index: number) => {
