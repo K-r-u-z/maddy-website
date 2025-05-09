@@ -92,7 +92,7 @@ const MobileNav = styled.div<MobileMenuProps>`
     top: 0;
     width: 100%;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     opacity: ${({ $isOpen }) => ($isOpen ? '1' : '0')};
@@ -107,13 +107,10 @@ const MobileNavContent = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
   padding: ${({ theme }) => theme.spacing.xl};
-  padding-top: 0;
-  padding-bottom: 0;
-  gap: ${({ theme }) => theme.spacing.lg};
-  margin-top: -40px;
+  gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const NavLink = styled.a<NavLinkProps>`
@@ -144,7 +141,7 @@ const NavLink = styled.a<NavLinkProps>`
   }
 
   @media (max-width: ${MOBILE_BREAKPOINT}) {
-    font-size: 2rem;
+    font-size: 1.25rem;
     padding: ${({ theme }) => theme.spacing.sm} 0;
     font-weight: 500;
     color: ${({ $isActive, theme }) => 
@@ -160,7 +157,7 @@ const NavLink = styled.a<NavLinkProps>`
       bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
-      width: ${({ $isActive }) => ($isActive ? '100px' : '50px')};
+      width: ${({ $isActive }) => ($isActive ? '80px' : '40px')};
       height: 2px;
       background-color: ${({ $isActive, theme }) => 
         $isActive ? theme.colors.secondary[500] : theme.colors.primary[800]};
@@ -193,7 +190,9 @@ const OrderButton = styled.button`
     display: flex;
     width: 100%;
     justify-content: center;
-    margin-top: ${({ theme }) => theme.spacing.md};
+    margin-top: ${({ theme }) => theme.spacing.sm};
+    padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.lg};
+    font-size: 1.25rem;
   }
 `;
 
@@ -227,7 +226,11 @@ const DropdownMenu = styled.div`
     margin-top: ${({ theme }) => theme.spacing.sm};
     width: 100%;
     box-shadow: none;
-    border: 1px solid ${({ theme }) => theme.colors.primary[200]};
+    border: none;
+    background-color: ${({ theme }) => theme.colors.primary[500]};
+    border-radius: ${({ theme }) => theme.borderRadius.full};
+    overflow: hidden;
+    margin-bottom: ${({ theme }) => theme.spacing.sm};
   }
 `;
 
@@ -243,6 +246,23 @@ const DropdownItem = styled.a`
     background-color: ${({ theme }) => theme.colors.primary[50]};
     color: ${({ theme }) => theme.colors.primary[700]};
   }
+
+  @media (max-width: ${MOBILE_BREAKPOINT}) {
+    padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+    color: white;
+    text-align: center;
+    font-size: 1.1rem;
+    border-bottom: 1px solid ${({ theme }) => theme.colors.primary[400]};
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: ${({ theme }) => theme.colors.primary[600]};
+      color: white;
+    }
+  }
 `;
 
 const MenuButton = styled.button<MobileMenuProps>`
@@ -255,7 +275,7 @@ const MenuButton = styled.button<MobileMenuProps>`
     width: 24px;
     height: 20px;
     position: fixed;
-    top: 25px;
+    top: 20px;
     right: 20px;
     background: none;
     border: none;

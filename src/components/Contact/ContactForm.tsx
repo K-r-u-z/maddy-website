@@ -231,7 +231,7 @@ const ContactForm = () => {
         formDataToSend.append('images', image);
       });
 
-      const response = await fetch('/api/contact', {
+      const response = await fetch('/api/public/contact', {
         method: 'POST',
         body: formDataToSend,
       });
